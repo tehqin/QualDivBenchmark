@@ -16,12 +16,14 @@ namespace StrategySearch
 {
    class Program
    {
+      static double boundaryValue = 5.12;
+
       static double eval_sphere(double[] vs)
       {
          double sum = 0;
          foreach (double x in vs)
          {
-            double v = x - 5.12 * 0.4;
+            double v = x - boundaryValue * 0.4;
             sum += v * v;
          }
          return -sum;
@@ -34,7 +36,7 @@ namespace StrategySearch
          double right = 0;
          foreach (double x in vs)
          {
-            double v = x - 5.12 * 0.4;
+            double v = x - boundaryValue * 0.4;
             right += v * v - A * Math.Cos(2 * Math.PI * v);
          }
          return -(left+right);
@@ -77,25 +79,69 @@ namespace StrategySearch
          _params.NumToEvaluate = populationSize * numGenerations;
          _params.NumElites = numElites;
          _params.MutationScalar = mutationRate;
+         
+         //int numParams = 100;
 
-         /*
          int[] layers = new int[]{10, 5, 4, 1};
          int numParams = 0;
          for (int i=0; i<layers.Length-1; i++)
             numParams += layers[i]*layers[i+1];
-         */
          
-         int numParams = 100;
          Console.WriteLine(numParams);
+        
          double maxFitness = -100000000000000000.0;
          
          SearchAlgorithm search = new CMA_ES_Algorithm(_params, numParams);
          while (search.IsRunning())
          {
             Individual cur = search.GenerateIndividual();
-            //cur.Fitness = evaluate_nn(cur.ParamVector, layers);
+            cur.Fitness = evaluate_nn(cur.ParamVector, layers);
+            //cur.Fitness = evaluate(cur.ParamVector);
+            maxFitness = Math.Max(maxFitness, cur.Fitness);
+
+            search.ReturnEvaluatedIndividual(cur);
+         }
+      }
+
+      static void run_me()
+      {
+         int numParams = 100;
+         Console.WriteLine(numParams);
+         
+         var searchParams = new MapElitesSearchParams();
+         searchParams.InitialPopulation = populationSize;
+         searchParams.NumToEvaluate = 50000;
+         searchParams.MutationPower = 0.8;
+
+         var mapParams = new MapParams();
+         mapParams.Type = "FixedFeature";
+         mapParams.StartSize = 40;
+         mapParams.EndSize = 40;
+
+         var feature1 = new FeatureParams();
+         feature1.Name = "Sum1";
+         feature1.MinValue = -(numParams * boundaryValue) / 2.0;
+         feature1.MaxValue = (numParams * boundaryValue) / 2.0;
+         
+         var feature2 = new FeatureParams();
+         feature2.Name = "Sum2";
+         feature1.MinValue = -(numParams * boundaryValue) / 2.0;
+         feature1.MaxValue = (numParams * boundaryValue) / 2.0;
+         
+         var meParams = new MapElitesParams();
+         meParams.Search = searchParams;
+         meParams.Map = mapParams;
+        
+         double maxFitness = -100000000000000000.0;
+         
+         SearchAlgorithm search = new MapElitesAlgorithm(_params, numParams);
+         while (search.IsRunning())
+         {
+            Individual cur = search.GenerateIndividual();
             cur.Fitness = evaluate(cur.ParamVector);
             maxFitness = Math.Max(maxFitness, cur.Fitness);
+            if (curFitness > maxFitness)
+               Console.WriteLine("MAX: "+maxFitness);
 
             search.ReturnEvaluatedIndividual(cur);
          }
@@ -103,8 +149,8 @@ namespace StrategySearch
 
       static void Main(string[] args)
       {
-         run_cma_es(200, 50, 100, 0.8);
-         //run_cma_es(1, 1, 1, 1.0);
+         //run_cma_es(200, 18, 37, 0.8);
+         run_me();
       }
    }
 }
