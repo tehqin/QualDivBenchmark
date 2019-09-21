@@ -40,33 +40,38 @@ namespace StrategySearch.Search.CMA_ES
 		{
          _numParams = numParams;
 			_params = searchParams;
+			
+         _individualsEvaluated = 0;
+			_population = new List<Individual>();
 
-         if (searchParams.PopulationSize == -1)
-            searchParams.PopulationSize = (int)(4.0+Math.Floor(3.0*Math.Log(_numParams)));
-         if (searchParams.NumElites == -1)
-            searchParams.NumElites = searchParams.PopulationSize / 2;
-         _mutationPower = searchParams.MutationScalar;
+         Reset();
+      }
+
+      public void Reset()
+      {
+         if (_params.PopulationSize == -1)
+            _params.PopulationSize = (int)(4.0+Math.Floor(3.0*Math.Log(_numParams)));
+         if (_params.NumElites == -1)
+            _params.NumElites = _params.PopulationSize / 2;
+         _mutationPower = _params.MutationScalar;
 
          _weights = MathNet.Numerics.LinearAlgebra.
-            Vector<double>.Build.Dense(searchParams.NumElites);
-         for (int i=0; i<searchParams.NumElites; i++)
-            _weights[i] = Math.Log(searchParams.NumElites+0.5)-Math.Log(i+1);
+            Vector<double>.Build.Dense(_params.NumElites);
+         for (int i=0; i<_params.NumElites; i++)
+            _weights[i] = Math.Log(_params.NumElites+0.5)-Math.Log(i+1);
          _weights /= _weights.Sum();
          double sum_weights = _weights.Sum();
          double sum_squares = _weights.Sum(x => x * x);
          _mueff = sum_weights * sum_weights / sum_squares;
 
-			_population = new List<Individual>();
-			_individualsEvaluated = 0;
-			_mean = MathNet.Numerics.LinearAlgebra.Vector<double>
-							.Build.Dense(_numParams);
+			_mean = LA.Vector<double>.Build.Random(_numParams);
 
-         _cc = (4+_mueff/numParams) / (numParams+4 + 2*_mueff/numParams);
-         _cs = (_mueff+2) / (numParams+_mueff+5);
-         _c1 = 2 / (Math.Pow(numParams+1.3, 2) + _mueff);
+         _cc = (4+_mueff/_numParams) / (_numParams+4 + 2*_mueff/_numParams);
+         _cs = (_mueff+2) / (_numParams+_mueff+5);
+         _c1 = 2 / (Math.Pow(_numParams+1.3, 2) + _mueff);
          _cmu = Math.Min(1-_c1, 
-                2*(_mueff-2+1/_mueff) / (Math.Pow(numParams+2, 2)+_mueff));
-         _damps = 1+2*Math.Max(0, Math.Sqrt((_mueff-1)/(numParams+1))-1)+_cs;
+                2*(_mueff-2+1/_mueff) / (Math.Pow(_numParams+2, 2)+_mueff));
+         _damps = 1+2*Math.Max(0, Math.Sqrt((_mueff-1)/(_numParams+1))-1)+_cs;
          _chiN = Math.Sqrt(_numParams) * 
             (1.0-1.0/(4.0*_numParams)+1.0/(21.0*Math.Pow(_numParams,2)));
 
@@ -76,6 +81,23 @@ namespace StrategySearch.Search.CMA_ES
                        Vector<double>.Build.Dense(_numParams);
 		
          _C = new DecompMatrix(_numParams);
+      }
+
+      public bool CheckStop(List<Individual> parents)
+      {
+         if (_C.ConditionNumber > 1e14)
+            return true;
+         
+         double area = _mutationPower * Math.Sqrt(_C.Eigenvalues.Maximum());
+         if (area < 1e-11)
+            return true;
+         
+         double flatness = 
+            Math.Abs(parents[0].Fitness - parents[parents.Count-1].Fitness);
+         if (flatness < 1e-12)
+            return true;
+
+         return false;      
       }
 
 		public bool IsRunning() => _individualsEvaluated < _params.NumToEvaluate;
@@ -106,6 +128,7 @@ namespace StrategySearch.Search.CMA_ES
 					.Take(_params.NumElites).ToList();
             Console.WriteLine("Fitness: "+parents[0].Fitness);
 
+            
             // Recombination of the new mean
 		      LA.Vector<double> oldMean = _mean;
             _mean = LA.Vector<double>.Build.Dense(_numParams);
@@ -132,12 +155,16 @@ namespace StrategySearch.Search.CMA_ES
                LA.Vector<double> dv = DenseVector.OfArray(parents[i].ParamVector) - oldMean;
                _C.C += _weights[i] * _cmu * dv.OuterProduct(dv) / _mutationPower;
             }
+
+            if (CheckStop(parents))
+               Reset();
             _C.UpdateEigensystem();
 
             // Update sigma
             double cn = _cs / _damps;
             double sumSquarePs = _ps.DotProduct(_ps);
             _mutationPower *= Math.Exp(Math.Min(1, cn * (sumSquarePs / _numParams - 1) / 2));
+
 
             _population.Clear();
 			}

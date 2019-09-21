@@ -11,6 +11,7 @@ using StrategySearch.Config;
 using StrategySearch.NeuralNet;
 using StrategySearch.Search;
 using StrategySearch.Search.CMA_ES;
+using StrategySearch.Search.MapElites;
 
 namespace StrategySearch
 {
@@ -80,24 +81,24 @@ namespace StrategySearch
          _params.NumElites = numElites;
          _params.MutationScalar = mutationRate;
          
-         //int numParams = 100;
+         int numParams = 100;
 
+         /*
          int[] layers = new int[]{10, 5, 4, 1};
          int numParams = 0;
          for (int i=0; i<layers.Length-1; i++)
             numParams += layers[i]*layers[i+1];
+         */
          
          Console.WriteLine(numParams);
         
-         double maxFitness = -100000000000000000.0;
          
          SearchAlgorithm search = new CMA_ES_Algorithm(_params, numParams);
          while (search.IsRunning())
          {
             Individual cur = search.GenerateIndividual();
-            cur.Fitness = evaluate_nn(cur.ParamVector, layers);
-            //cur.Fitness = evaluate(cur.ParamVector);
-            maxFitness = Math.Max(maxFitness, cur.Fitness);
+            //cur.Fitness = evaluate_nn(cur.ParamVector, layers);
+            cur.Fitness = evaluate(cur.ParamVector);
 
             search.ReturnEvaluatedIndividual(cur);
          }
@@ -109,48 +110,45 @@ namespace StrategySearch
          Console.WriteLine(numParams);
          
          var searchParams = new MapElitesSearchParams();
-         searchParams.InitialPopulation = populationSize;
+         searchParams.InitialPopulation = 100;
          searchParams.NumToEvaluate = 50000;
          searchParams.MutationPower = 0.8;
-
-         var mapParams = new MapParams();
-         mapParams.Type = "FixedFeature";
-         mapParams.StartSize = 40;
-         mapParams.EndSize = 40;
 
          var feature1 = new FeatureParams();
          feature1.Name = "Sum1";
          feature1.MinValue = -(numParams * boundaryValue) / 2.0;
          feature1.MaxValue = (numParams * boundaryValue) / 2.0;
+         Console.WriteLine(feature1.MinValue);
+         Console.WriteLine(feature1.MaxValue);
          
          var feature2 = new FeatureParams();
          feature2.Name = "Sum2";
-         feature1.MinValue = -(numParams * boundaryValue) / 2.0;
-         feature1.MaxValue = (numParams * boundaryValue) / 2.0;
-         
+         feature2.MinValue = -(numParams * boundaryValue) / 2.0;
+         feature2.MaxValue = (numParams * boundaryValue) / 2.0;
+ 
+         var mapParams = new MapParams();
+         mapParams.Type = "FixedFeature";
+         mapParams.StartSize = 40;
+         mapParams.EndSize = 40;
+         mapParams.Features = new FeatureParams[]{feature1, feature2};
+        
          var meParams = new MapElitesParams();
          meParams.Search = searchParams;
          meParams.Map = mapParams;
         
-         double maxFitness = -100000000000000000.0;
-         
-         SearchAlgorithm search = new MapElitesAlgorithm(_params, numParams);
+         SearchAlgorithm search = new MapElitesAlgorithm(meParams, numParams);
          while (search.IsRunning())
          {
             Individual cur = search.GenerateIndividual();
             cur.Fitness = evaluate(cur.ParamVector);
-            maxFitness = Math.Max(maxFitness, cur.Fitness);
-            if (curFitness > maxFitness)
-               Console.WriteLine("MAX: "+maxFitness);
-
             search.ReturnEvaluatedIndividual(cur);
          }
       }
 
       static void Main(string[] args)
       {
-         //run_cma_es(200, 18, 37, 0.8);
-         run_me();
+         run_cma_es(5000, 50, 100, 0.8);
+         //run_me();
       }
    }
 }

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 
 using StrategySearch.Config;
-using StrategySearch.Logging;
+//using StrategySearch.Logging;
 using StrategySearch.Mapping;
 using StrategySearch.Mapping.Sizers;
 
@@ -27,7 +27,7 @@ namespace StrategySearch.Search.MapElites
       private int _individualsEvaluated;
       private FeatureMap _featureMap;
 
-      private FrequentMapLog _map_log;
+      //private FrequentMapLog _map_log;
       
       public MapElitesAlgorithm(MapElitesParams searchParams, int numParams)
       {
@@ -55,7 +55,7 @@ namespace StrategySearch.Search.MapElites
          else
             Console.WriteLine("ERROR: No feature map specified in config file.");
 
-         _map_log = new FrequentMapLog("logs/elite_map_log.csv", _featureMap);
+         //_map_log = new FrequentMapLog("logs/elite_map_log.csv", _featureMap);
       }
 
       public bool IsRunning() => _individualsEvaluated < _params.Search.NumToEvaluate;
@@ -92,7 +92,19 @@ namespace StrategySearch.Search.MapElites
             ind.Features[i] = ind.GetStatByName(_params.Map.Features[i].Name);
 
          _featureMap.Add(ind);
-         _map_log.UpdateLog();
+
+         Console.WriteLine("Coverage: "+_featureMap.EliteMap.Count);
+         //_map_log.UpdateLog();
+      
+         if (!IsRunning())
+         {
+            /*
+            foreach (var curInd in _featureMap.EliteMap)
+            {
+               Console.WriteLine(curInd.Key + " " + 
+                     string.Join(' ', curInd.Value.Features));
+            }*/
+         }
       }
    }
 }

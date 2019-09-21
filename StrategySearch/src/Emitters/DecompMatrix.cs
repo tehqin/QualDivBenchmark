@@ -11,8 +11,8 @@ namespace StrategySearch.Emitters
    class DecompMatrix
    {
       private int _numDimensions;
-      private int _condition_number;
 
+      public double ConditionNumber;
       public Matrix<double> C { get; set; }
       public Matrix<double> Invsqrt { get; set; }
       public Matrix<double> Eigenbasis { get; set; }
@@ -21,8 +21,8 @@ namespace StrategySearch.Emitters
       public DecompMatrix(int numDimensions)
       {
          _numDimensions = numDimensions;
-         _condition_number = 1;
-         
+
+         ConditionNumber = 1.0;
          C = DenseMatrix.CreateIdentity(_numDimensions);
          Eigenbasis = DenseMatrix.CreateIdentity(_numDimensions);
          Eigenvalues = LA.Vector<double>.Build.Dense(_numDimensions, i => 1.0);
