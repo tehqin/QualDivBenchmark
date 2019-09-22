@@ -64,7 +64,7 @@ namespace StrategySearch.Search.CMA_ES
          double sum_squares = _weights.Sum(x => x * x);
          _mueff = sum_weights * sum_weights / sum_squares;
 
-			_mean = LA.Vector<double>.Build.Dense(_numParams);
+         _mean = LA.Vector<double>.Build.Dense(_numParams);
 
          _cc = (4+_mueff/_numParams) / (_numParams+4 + 2*_mueff/_numParams);
          _cs = (_mueff+2) / (_numParams+_mueff+5);
