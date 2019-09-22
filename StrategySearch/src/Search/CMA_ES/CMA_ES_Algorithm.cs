@@ -51,20 +51,20 @@ namespace StrategySearch.Search.CMA_ES
       {
          if (_params.PopulationSize == -1)
             _params.PopulationSize = (int)(4.0+Math.Floor(3.0*Math.Log(_numParams)));
-         if (_params.NumElites == -1)
-            _params.NumElites = _params.PopulationSize / 2;
-         _mutationPower = _params.MutationScalar;
+         if (_params.NumParents == -1)
+            _params.NumParents = _params.PopulationSize / 2;
+         _mutationPower = _params.MutationPower;
 
          _weights = MathNet.Numerics.LinearAlgebra.
-            Vector<double>.Build.Dense(_params.NumElites);
-         for (int i=0; i<_params.NumElites; i++)
-            _weights[i] = Math.Log(_params.NumElites+0.5)-Math.Log(i+1);
+            Vector<double>.Build.Dense(_params.NumParents);
+         for (int i=0; i<_params.NumParents; i++)
+            _weights[i] = Math.Log(_params.NumParents+0.5)-Math.Log(i+1);
          _weights /= _weights.Sum();
          double sum_weights = _weights.Sum();
          double sum_squares = _weights.Sum(x => x * x);
          _mueff = sum_weights * sum_weights / sum_squares;
 
-			_mean = LA.Vector<double>.Build.Random(_numParams);
+			_mean = LA.Vector<double>.Build.Dense(_numParams);
 
          _cc = (4+_mueff/_numParams) / (_numParams+4 + 2*_mueff/_numParams);
          _cs = (_mueff+2) / (_numParams+_mueff+5);
@@ -75,10 +75,8 @@ namespace StrategySearch.Search.CMA_ES
          _chiN = Math.Sqrt(_numParams) * 
             (1.0-1.0/(4.0*_numParams)+1.0/(21.0*Math.Pow(_numParams,2)));
 
-         _pc = MathNet.Numerics.LinearAlgebra.
-                       Vector<double>.Build.Dense(_numParams);
-         _ps = MathNet.Numerics.LinearAlgebra.
-                       Vector<double>.Build.Dense(_numParams);
+         _pc = LA.Vector<double>.Build.Dense(_numParams);
+         _ps = LA.Vector<double>.Build.Dense(_numParams);
 		
          _C = new DecompMatrix(_numParams);
       }
@@ -119,20 +117,21 @@ namespace StrategySearch.Search.CMA_ES
 
 		public void ReturnEvaluatedIndividual(Individual ind)
 		{
+         ind.ID = _individualsEvaluated;
 			_individualsEvaluated++;
 			_population.Add(ind);
 			if (_population.Count >= _params.PopulationSize)
 			{
             // Rank solutions
 				var parents = _population.OrderByDescending(o => o.Fitness)
-					.Take(_params.NumElites).ToList();
+					.Take(_params.NumParents).ToList();
             Console.WriteLine("Fitness: "+parents[0].Fitness);
 
             
             // Recombination of the new mean
 		      LA.Vector<double> oldMean = _mean;
             _mean = LA.Vector<double>.Build.Dense(_numParams);
-            for (int i=0; i<_params.NumElites; i++)
+            for (int i=0; i<_params.NumParents; i++)
                _mean += DenseVector.OfArray(parents[i].ParamVector) * _weights[i]; 
             //Console.WriteLine("Mean: "+_mean);
 
@@ -150,10 +149,10 @@ namespace StrategySearch.Search.CMA_ES
             double c1a = _c1 * (1.0 - (1.0 - hsig * hsig) * _cc * (2.0 - _cc));
             _C.C *= (1.0 - c1a - _cmu);
             _C.C += _c1 * _pc.OuterProduct(_pc);
-            for (int i=0; i<_params.NumElites; i++)
+            for (int i=0; i<_params.NumParents; i++)
             {
                LA.Vector<double> dv = DenseVector.OfArray(parents[i].ParamVector) - oldMean;
-               _C.C += _weights[i] * _cmu * dv.OuterProduct(dv) / _mutationPower;
+               _C.C += _weights[i] * _cmu * dv.OuterProduct(dv) / (_mutationPower * _mutationPower);
             }
 
             if (CheckStop(parents))
