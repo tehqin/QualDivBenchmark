@@ -73,13 +73,13 @@ namespace StrategySearch
          return result / count;
       }
 
-      static void run_cma_es(int numGenerations, int numElites, int populationSize, double mutationRate)
+      static void run_cma_es(int numGenerations, int numParents, int populationSize, double mutationRate)
       {
          var _params = new CMA_ES_Params();
          _params.PopulationSize = populationSize;
          _params.NumToEvaluate = populationSize * numGenerations;
-         _params.NumElites = numElites;
-         _params.MutationScalar = mutationRate;
+         _params.NumParents = numParents;
+         _params.MutationPower = mutationRate;
          
          int numParams = 100;
 
@@ -147,7 +147,7 @@ namespace StrategySearch
 
       static void Main(string[] args)
       {
-         run_cma_es(5000, 50, 100, 0.8);
+         run_cma_es(500, 50, 100, 0.8);
          //run_me();
       }
    }
