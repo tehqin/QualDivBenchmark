@@ -64,7 +64,7 @@ namespace StrategySearch.Search.CMA_ME
 			Emitter em = _emitters[pos];
          for (int i=1; i<_emitters.Count; i++)
          {
-            if (em.NumReleased < _emitters[i].NumReleased)
+            if (em.NumReleased > _emitters[i].NumReleased)
             {
                em = _emitters[i];
                pos = i;
