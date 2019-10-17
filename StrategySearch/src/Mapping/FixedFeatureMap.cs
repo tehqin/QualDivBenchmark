@@ -15,9 +15,9 @@ namespace StrategySearch.Mapping
    class FixedFeatureMap : FeatureMap
    {
       private static Random rnd = new Random();
-      private List<Individual> _allIndividuals;
 
       private MapSizer _groupSizer;
+      private int _numIndividualsEvaluated;
       private int _maxIndividualsToEvaluate;
 
       public int NumGroups { get; private set; }
@@ -31,8 +31,8 @@ namespace StrategySearch.Mapping
 
 		public FixedFeatureMap(int numToEvaluate, MapParams config, MapSizer groupSizer)
       {
-         _allIndividuals = new List<Individual>();
          _groupSizer = groupSizer;
+         _numIndividualsEvaluated = 0;
          _maxIndividualsToEvaluate = numToEvaluate;
          NumGroups = -1;
 
@@ -44,6 +44,10 @@ namespace StrategySearch.Mapping
             _lowGroupBound[i] = config.Features[i].MinValue;
             _highGroupBound[i] = config.Features[i].MaxValue;
          }
+
+         _eliteIndices = new List<string>();
+         EliteMap = new Dictionary<string,Individual>();
+         CellCount = new Dictionary<string,int>();
       }
 
       private int GetFeatureIndex(int featureId, double feature)
@@ -59,51 +63,64 @@ namespace StrategySearch.Mapping
          return index;
       }
 
-		private void AddToMap(Individual toAdd)
+      private string GetIndex(Individual cur)
       {
          var features = new int[NumFeatures];
          for (int i=0; i<NumFeatures; i++)
-            features[i] = GetFeatureIndex(i, toAdd.Features[i]);
-         string index = string.Join(":", features);
+            features[i] = GetFeatureIndex(i, cur.Features[i]);
+         return string.Join(":", features);
+      }
 
+		private bool AddToMap(Individual toAdd)
+      {
+         string index = GetIndex(toAdd);
+
+         bool replacedElite = false;
          if (!EliteMap.ContainsKey(index))
          {
+            toAdd.IsNovel = true;
+            toAdd.Delta = toAdd.Fitness;
             _eliteIndices.Add(index);
             EliteMap.Add(index, toAdd);
             CellCount.Add(index, 0);
+            replacedElite = true;
          }
          else if (EliteMap[index].Fitness < toAdd.Fitness)
          {
+            toAdd.Delta = toAdd.Fitness - EliteMap[index].Fitness;
             EliteMap[index] = toAdd;
+            replacedElite = true;
          }
 
          CellCount[index] += 1;
+         return replacedElite;
       }
 
       private void Remap(int nextNumGroups)
       {
-         // Update the new group size
          NumGroups = nextNumGroups;
 
-         // Repopulate the map
+         List<Individual> allElites = new List<Individual>();
+         foreach (string index in _eliteIndices)
+            allElites.Add(EliteMap[index]); 
+
          _eliteIndices = new List<string>();
          EliteMap = new Dictionary<string,Individual>();
          CellCount = new Dictionary<string,int>();
-         foreach (Individual cur in _allIndividuals)
+         foreach (Individual cur in allElites)
             AddToMap(cur);
       }
 
-      public void Add(Individual toAdd)
+      public bool Add(Individual toAdd)
       {
-         _allIndividuals.Add(toAdd);
-
+         _numIndividualsEvaluated++;
          double portionDone =
-            1.0 * _allIndividuals.Count / _maxIndividualsToEvaluate;
+            1.0 * _numIndividualsEvaluated / _maxIndividualsToEvaluate;
          int nextNumGroups = _groupSizer.GetSize(portionDone);
          if (nextNumGroups != NumGroups)
             Remap(nextNumGroups);
-         else
-            AddToMap(toAdd);
+            
+         return AddToMap(toAdd);
       }
 
       public Individual GetRandomElite()

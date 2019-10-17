@@ -5,20 +5,24 @@ namespace StrategySearch.Search
    class Individual
    {
       public int ID { get; set; }
+      public int EmitterID { get; set; }
       
       public double Fitness { get; set; }
+      public double Delta { get; set; }
+      public bool IsNovel { get; set; }
       public double[] ParamVector { get; set; }
       public double[] Features { get; set; }
 
       public Individual(int numParams)
       {
          ParamVector = new double[numParams];
+         IsNovel = false;
       }
 
       public double Reduce(double v)
       {
          if (Math.Abs(v) > 5.12)
-            return 1.0 / v;
+            return 5.12 / v;
          return v;
       }
 

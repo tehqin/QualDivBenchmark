@@ -11,7 +11,7 @@ namespace StrategySearch.Mapping
       Dictionary<string, Individual> EliteMap { get; }
       Dictionary<string, int> CellCount { get; }
 
-      void Add(Individual toAdd);
+      bool Add(Individual toAdd);
       Individual GetRandomElite();
    }
 }

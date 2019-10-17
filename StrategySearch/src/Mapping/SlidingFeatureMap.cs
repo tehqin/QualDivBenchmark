@@ -54,25 +54,29 @@ namespace StrategySearch.Mapping
          return Math.Max(0, index-1);
       }
 
-      private void AddToMap(Individual toAdd)
+      private bool AddToMap(Individual toAdd)
       {
          var features = new int[NumFeatures];
          for (int i=0; i<NumFeatures; i++)
             features[i] = GetFeatureIndex(i, toAdd.Features[i]);
          string index = string.Join(":", features);
      
+         bool replacedElite = false;
          if (!EliteMap.ContainsKey(index))
          {
             _eliteIndices.Add(index);
             EliteMap.Add(index, toAdd);
             CellCount.Add(index, 0);
+            replacedElite = true;
          }
          else if (EliteMap[index].Fitness < toAdd.Fitness)
          {
             EliteMap[index] = toAdd;
+            replacedElite = true;
          }
 
          CellCount[index] += 1;
+         return replacedElite;
       }
 
       // Update the boundaries of each feature.
@@ -113,14 +117,13 @@ namespace StrategySearch.Mapping
             AddToMap(cur);
       }
 
-      public void Add(Individual toAdd)
+      public bool Add(Individual toAdd)
       {
-         _allIndividuals.Add(toAdd);
-
-         if (_allIndividuals.Count % _remapFrequency == 1)
+         if (_allIndividuals.Count % _remapFrequency == 0)
             Remap();
-         else 
-            AddToMap(toAdd);
+            
+         _allIndividuals.Add(toAdd);
+         return AddToMap(toAdd);
       }
 
       public Individual GetRandomElite()
