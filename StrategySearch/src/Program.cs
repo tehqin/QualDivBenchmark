@@ -11,6 +11,7 @@ using StrategySearch.Config;
 using StrategySearch.NeuralNet;
 using StrategySearch.Search;
 using StrategySearch.Search.CMA_ES;
+using StrategySearch.Search.CMA_ME;
 using StrategySearch.Search.MapElites;
 
 namespace StrategySearch
@@ -128,8 +129,8 @@ namespace StrategySearch
  
          var mapParams = new MapParams();
          mapParams.Type = "FixedFeature";
-         mapParams.StartSize = 40;
-         mapParams.EndSize = 40;
+         mapParams.StartSize = 80;
+         mapParams.EndSize = 80;
          mapParams.Features = new FeatureParams[]{feature1, feature2};
         
          var meParams = new MapElitesParams();
@@ -145,10 +146,59 @@ namespace StrategySearch
          }
       }
 
+      static void run_cma_me()
+      {
+         int numParams = 100;
+         Console.WriteLine(numParams);
+         
+         var searchParams = new CMA_ME_SearchParams();
+         searchParams.NumToEvaluate = 50000;
+
+         var feature1 = new FeatureParams();
+         feature1.Name = "Sum1";
+         feature1.MinValue = -(numParams * boundaryValue) / 2.0;
+         feature1.MaxValue = (numParams * boundaryValue) / 2.0;
+         
+         var feature2 = new FeatureParams();
+         feature2.Name = "Sum2";
+         feature2.MinValue = -(numParams * boundaryValue) / 2.0;
+         feature2.MaxValue = (numParams * boundaryValue) / 2.0;
+ 
+         var mapParams = new MapParams();
+         mapParams.Type = "FixedFeature";
+         mapParams.StartSize = 80;
+         mapParams.EndSize = 80;
+         mapParams.Features = new FeatureParams[]{feature1, feature2};
+        
+         var impEmitter = new EmitterParams();
+         impEmitter.Type = "Improvement";
+         impEmitter.Count = 1;
+         impEmitter.PopulationSize = 37;
+         impEmitter.MutationPower = 0.8;
+         
+         var meParams = new CMA_ME_Params();
+         meParams.Search = searchParams;
+         meParams.Map = mapParams;
+         meParams.Emitters = new EmitterParams[]{ impEmitter };
+        
+         double best = Double.MinValue;
+         SearchAlgorithm search = new CMA_ME_Algorithm(meParams, numParams);
+         while (search.IsRunning())
+         {
+            Individual cur = search.GenerateIndividual();
+            cur.Fitness = evaluate(cur.ParamVector);
+            best = Math.Max(best, cur.Fitness);
+            search.ReturnEvaluatedIndividual(cur);
+         }
+         Console.WriteLine(best);
+      }
+
+
       static void Main(string[] args)
       {
-         run_cma_es(500, 50, 100, 0.8);
-         //run_me();
+         //run_cma_es(500, 50, 100, 0.8);
+         //run_cma_me();
+         run_me();
       }
    }
 }
