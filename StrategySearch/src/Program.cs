@@ -46,7 +46,7 @@ namespace StrategySearch
 
       static double evaluate(double[] vs)
       {
-         return eval_sphere(vs);
+         return eval_rastrigin(vs);
       }
 
       static double evaluate_nn(double[] vs, int[] layers)
@@ -107,7 +107,7 @@ namespace StrategySearch
 
       static void run_me()
       {
-         int numParams = 100;
+         int numParams = 20;
          Console.WriteLine(numParams);
          
          var searchParams = new MapElitesSearchParams();
@@ -148,7 +148,7 @@ namespace StrategySearch
 
       static void run_cma_me()
       {
-         int numParams = 100;
+         int numParams = 20;
          Console.WriteLine(numParams);
          
          var searchParams = new CMA_ME_SearchParams();
@@ -172,14 +172,27 @@ namespace StrategySearch
         
          var impEmitter = new EmitterParams();
          impEmitter.Type = "Improvement";
-         impEmitter.Count = 1;
+         impEmitter.Count = 5;
          impEmitter.PopulationSize = 37;
          impEmitter.MutationPower = 0.8;
          
+         var optEmitter = new EmitterParams();
+         optEmitter.Type = "Optimizing";
+         optEmitter.Count = 5;
+         optEmitter.PopulationSize = 37;
+         optEmitter.NumParents = impEmitter.PopulationSize / 2;
+         optEmitter.MutationPower = 0.8;
+         
+         var rdEmitter = new EmitterParams();
+         rdEmitter.Type = "RandomDirection";
+         rdEmitter.Count = 5;
+         rdEmitter.PopulationSize = 37;
+         rdEmitter.MutationPower = 0.8;
+ 
          var meParams = new CMA_ME_Params();
          meParams.Search = searchParams;
          meParams.Map = mapParams;
-         meParams.Emitters = new EmitterParams[]{ impEmitter };
+         meParams.Emitters = new EmitterParams[]{ rdEmitter };
         
          double best = Double.MinValue;
          SearchAlgorithm search = new CMA_ME_Algorithm(meParams, numParams);
@@ -196,9 +209,9 @@ namespace StrategySearch
 
       static void Main(string[] args)
       {
-         //run_cma_es(500, 50, 100, 0.8);
-         //run_cma_me();
-         run_me();
+         //run_cma_es(500, -1, 100, 0.8);
+         run_cma_me();
+         //run_me();
       }
    }
 }
