@@ -46,7 +46,7 @@ namespace StrategySearch
 
       static double evaluate(double[] vs)
       {
-         return eval_rastrigin(vs);
+         return eval_sphere(vs);
       }
 
       static double evaluate_nn(double[] vs, int[] layers)
@@ -77,12 +77,13 @@ namespace StrategySearch
       static void run_cma_es(int numGenerations, int numParents, int populationSize, double mutationRate)
       {
          var _params = new CMA_ES_Params();
+         _params.OverflowFactor = 1.10;
          _params.PopulationSize = populationSize;
          _params.NumToEvaluate = populationSize * numGenerations;
          _params.NumParents = numParents;
          _params.MutationPower = mutationRate;
          
-         int numParams = 100;
+         int numParams = 20;
 
          /*
          int[] layers = new int[]{10, 5, 4, 1};
@@ -92,7 +93,6 @@ namespace StrategySearch
          */
          
          Console.WriteLine(numParams);
-        
          
          SearchAlgorithm search = new CMA_ES_Algorithm(_params, numParams);
          while (search.IsRunning())
@@ -100,7 +100,6 @@ namespace StrategySearch
             Individual cur = search.GenerateIndividual();
             //cur.Fitness = evaluate_nn(cur.ParamVector, layers);
             cur.Fitness = evaluate(cur.ParamVector);
-
             search.ReturnEvaluatedIndividual(cur);
          }
       }
@@ -173,12 +172,14 @@ namespace StrategySearch
          var impEmitter = new EmitterParams();
          impEmitter.Type = "Improvement";
          impEmitter.Count = 5;
+         impEmitter.OverflowFactor = 1.10;
          impEmitter.PopulationSize = 37;
          impEmitter.MutationPower = 0.8;
          
          var optEmitter = new EmitterParams();
          optEmitter.Type = "Optimizing";
          optEmitter.Count = 5;
+         optEmitter.OverflowFactor = 1.10;
          optEmitter.PopulationSize = 37;
          optEmitter.NumParents = impEmitter.PopulationSize / 2;
          optEmitter.MutationPower = 0.8;
@@ -186,13 +187,14 @@ namespace StrategySearch
          var rdEmitter = new EmitterParams();
          rdEmitter.Type = "RandomDirection";
          rdEmitter.Count = 5;
+         rdEmitter.OverflowFactor = 1.10;
          rdEmitter.PopulationSize = 37;
          rdEmitter.MutationPower = 0.8;
  
          var meParams = new CMA_ME_Params();
          meParams.Search = searchParams;
          meParams.Map = mapParams;
-         meParams.Emitters = new EmitterParams[]{ rdEmitter };
+         meParams.Emitters = new EmitterParams[]{ impEmitter };
         
          double best = Double.MinValue;
          SearchAlgorithm search = new CMA_ME_Algorithm(meParams, numParams);

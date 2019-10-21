@@ -6,6 +6,7 @@ namespace StrategySearch.Search
    {
       public int ID { get; set; }
       public int EmitterID { get; set; }
+      public int Generation { get; set; }
       
       public double Fitness { get; set; }
       public double Delta { get; set; }
