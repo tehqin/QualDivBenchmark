@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 
 using StrategySearch.Config;
+using StrategySearch.Logging;
 using StrategySearch.Emitters;
 using StrategySearch.Mapping;
 using StrategySearch.Mapping.Sizers;
@@ -10,12 +11,14 @@ namespace StrategySearch.Search.CMA_ME
 {
    class CMA_ME_Algorithm : SearchAlgorithm
    {
-      public CMA_ME_Algorithm(CMA_ME_Params searchParams, int numParams)
+      public CMA_ME_Algorithm(int trialID, CMA_ME_Params searchParams, int numParams)
       {
          _params = searchParams;
       
          _individualsEvaluated = 0;
+         _maxFitness = Double.MinValue;
 
+         _trialID = trialID;
          initMap();
          
          // Create the population of emitters.
@@ -39,9 +42,13 @@ namespace StrategySearch.Search.CMA_ME
 
       private CMA_ME_Params _params;
 
+      private double _maxFitness;
       private List<Emitter> _emitters;
       private int _individualsEvaluated;
       private FeatureMap _featureMap;
+
+      private int _trialID;
+      private FrequentMapLog _map_log;
 
       private void initMap()
       {
@@ -57,6 +64,9 @@ namespace StrategySearch.Search.CMA_ME
                                                 _params.Map, mapSizer);
          else
             Console.WriteLine("ERROR: No feature map specified in config file.");
+      
+         string mapName = string.Format("logs/elite_map_log_{0}.csv", _trialID);
+         _map_log = new FrequentMapLog(mapName, _featureMap);
       }
 
       public bool IsRunning() => _individualsEvaluated < _params.Search.NumToEvaluate;
@@ -102,8 +112,15 @@ namespace StrategySearch.Search.CMA_ME
             ind.Features[i] = ind.GetStatByName(_params.Map.Features[i].Name);
 
 			_emitters[ind.EmitterID].ReturnEvaluatedIndividual(ind);
+         _maxFitness = Math.Max(_maxFitness, ind.Fitness);
          
-			Console.WriteLine("Coverage: "+_featureMap.EliteMap.Count);
+         if (_individualsEvaluated % 100 == 0)
+            _map_log.UpdateLog();
+
+         if (!IsRunning())
+         {
+            Console.WriteLine(string.Format("{0},{1}", _maxFitness, _featureMap.EliteMap.Count));
+         }
       }
    }
 }

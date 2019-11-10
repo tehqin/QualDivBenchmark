@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 
 using StrategySearch.Config;
-//using StrategySearch.Logging;
+using StrategySearch.Logging;
 using StrategySearch.Mapping;
 using StrategySearch.Mapping.Sizers;
 
@@ -23,20 +23,24 @@ namespace StrategySearch.Search.MapElites
       private int _numParams;
       private MapElitesParams _params;
 
+      private double _maxFitness;
       private int _individualsDispatched;
       private int _individualsEvaluated;
       private FeatureMap _featureMap;
 
-      //private FrequentMapLog _map_log;
+      private int _trialID;
+      private FrequentMapLog _map_log;
       
-      public MapElitesAlgorithm(MapElitesParams searchParams, int numParams)
+      public MapElitesAlgorithm(int trialID, MapElitesParams searchParams, int numParams)
       {
          _numParams = numParams;
          _params = searchParams;
 
          _individualsEvaluated = 0;
          _individualsDispatched = 0;
+         _maxFitness = Double.MinValue;
 
+         _trialID = trialID;
          initMap();
       }
 
@@ -45,7 +49,6 @@ namespace StrategySearch.Search.MapElites
          var mapSizer = new LinearMapSizer(_params.Map.StartSize,
                                            _params.Map.EndSize);
          
-         Console.WriteLine("Map Type: " + _params.Map.Type);
          if (_params.Map.Type.Equals("FixedFeature"))
             _featureMap = new FixedFeatureMap(_params.Search.NumToEvaluate,
 															 _params.Map, mapSizer);
@@ -55,7 +58,8 @@ namespace StrategySearch.Search.MapElites
          else
             Console.WriteLine("ERROR: No feature map specified in config file.");
 
-         //_map_log = new FrequentMapLog("logs/elite_map_log.csv", _featureMap);
+         string mapName = string.Format("logs/elite_map_log_{0}.csv", _trialID);
+         _map_log = new FrequentMapLog(mapName, _featureMap);
       }
 
       public bool IsRunning() => _individualsEvaluated < _params.Search.NumToEvaluate;
@@ -91,19 +95,15 @@ namespace StrategySearch.Search.MapElites
          for (int i=0; i<_params.Map.Features.Length; i++)
             ind.Features[i] = ind.GetStatByName(_params.Map.Features[i].Name);
 
+         _maxFitness = Math.Max(_maxFitness, ind.Fitness);
          _featureMap.Add(ind);
 
-         Console.WriteLine("Coverage: "+_featureMap.EliteMap.Count);
-         //_map_log.UpdateLog();
+         if (_individualsEvaluated % 100 == 0)
+            _map_log.UpdateLog();
       
          if (!IsRunning())
          {
-            /*
-            foreach (var curInd in _featureMap.EliteMap)
-            {
-               Console.WriteLine(curInd.Key + " " + 
-                     string.Join(' ', curInd.Value.Features));
-            }*/
+            Console.WriteLine(string.Format("{0},{1},{2}", _params.Search.MutationPower, _maxFitness, _featureMap.EliteMap.Count));
          }
       }
    }

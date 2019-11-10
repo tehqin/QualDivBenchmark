@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Numerics;
 using System.Linq;
 
+using Nett;
+
 using MathNet.Numerics.LinearAlgebra;
 using MathNet.Numerics.LinearAlgebra.Double;
 using MathNet.Numerics.LinearAlgebra.Factorization;
 
 using StrategySearch.Config;
+using StrategySearch.Logging;
 using StrategySearch.NeuralNet;
 using StrategySearch.Search;
 using StrategySearch.Search.CMA_ES;
@@ -44,64 +47,9 @@ namespace StrategySearch
          return -(left+right);
       }
 
-      static double evaluate(double[] vs)
+      static double evaluate(int i, double[] vs)
       {
-         return eval_sphere(vs);
-      }
-
-      static double evaluate_nn(double[] vs, int[] layers)
-      {
-         int numInputs = layers[0]-1;
-         var network = new FullyConnectedNetwork(layers);
-         network.SetWeights(vs);
-
-         int count = 0;
-         double result = 0;
-         for (int mask=0; mask<(1<<numInputs); mask++)
-         {
-            var inputVector = new double[numInputs+1];
-            int sigNum = 1;
-            for (int i=0; i<numInputs; i++)
-               sigNum *= (mask&(1<<i)) > 0 ? 1 : -1;
-            for (int i=0; i<numInputs; i++)
-               inputVector[i] = (mask&(1<<i)) > 0 ? 1 : -1;
-            inputVector[numInputs] = 1;
-
-            double cur = network.Evaluate(inputVector)[0]; 
-            result += cur;
-            count++;
-         }
-         return result / count;
-      }
-
-      static void run_cma_es(int numGenerations, int numParents, int populationSize, double mutationRate)
-      {
-         var _params = new CMA_ES_Params();
-         _params.OverflowFactor = 1.10;
-         _params.PopulationSize = populationSize;
-         _params.NumToEvaluate = populationSize * numGenerations;
-         _params.NumParents = numParents;
-         _params.MutationPower = mutationRate;
-         
-         int numParams = 20;
-
-         /*
-         int[] layers = new int[]{10, 5, 4, 1};
-         int numParams = 0;
-         for (int i=0; i<layers.Length-1; i++)
-            numParams += layers[i]*layers[i+1];
-         */
-         
-         Console.WriteLine(numParams);
-         
-         SearchAlgorithm search = new CMA_ES_Algorithm(_params, numParams);
-         while (search.IsRunning())
-         {
-            Individual cur = search.GenerateIndividual();
-            //cur.Fitness = evaluate_nn(cur.ParamVector, layers);
-            cur.Fitness = evaluate(cur.ParamVector);
-            search.ReturnEvaluatedIndividual(cur);
-         }
+         return i == 0 ? eval_sphere(vs) : eval_rastrigin(vs);
       }
 
       static void run_me()
@@ -136,18 +84,18 @@ namespace StrategySearch
          meParams.Search = searchParams;
          meParams.Map = mapParams;
         
-         SearchAlgorithm search = new MapElitesAlgorithm(meParams, numParams);
+         SearchAlgorithm search = new MapElitesAlgorithm(0, meParams, numParams);
          while (search.IsRunning())
          {
             Individual cur = search.GenerateIndividual();
-            cur.Fitness = evaluate(cur.ParamVector);
+            cur.Fitness = evaluate(0, cur.ParamVector);
             search.ReturnEvaluatedIndividual(cur);
          }
       }
 
       static void run_cma_me()
       {
-         int numParams = 20;
+         int numParams = 30;
          Console.WriteLine(numParams);
          
          var searchParams = new CMA_ME_SearchParams();
@@ -194,26 +142,144 @@ namespace StrategySearch
          var meParams = new CMA_ME_Params();
          meParams.Search = searchParams;
          meParams.Map = mapParams;
-         meParams.Emitters = new EmitterParams[]{ impEmitter };
+         meParams.Emitters = new EmitterParams[]{ impEmitter, optEmitter };
         
          double best = Double.MinValue;
-         SearchAlgorithm search = new CMA_ME_Algorithm(meParams, numParams);
+         SearchAlgorithm search = new CMA_ME_Algorithm(0, meParams, numParams);
          while (search.IsRunning())
          {
             Individual cur = search.GenerateIndividual();
-            cur.Fitness = evaluate(cur.ParamVector);
+            cur.Fitness = evaluate(0, cur.ParamVector);
             best = Math.Max(best, cur.Fitness);
             search.ReturnEvaluatedIndividual(cur);
          }
          Console.WriteLine(best);
       }
 
+      static void run_me_tuning(int id, double sigma)
+      {
+         int numParams = 20;
+         
+         var searchParams = new MapElitesSearchParams();
+         searchParams.InitialPopulation = 100;
+         searchParams.NumToEvaluate = 50000;
+         searchParams.MutationPower = sigma;
+
+         var feature1 = new FeatureParams();
+         feature1.Name = "Sum1";
+         feature1.MinValue = -(numParams * boundaryValue) / 2.0;
+         feature1.MaxValue = (numParams * boundaryValue) / 2.0;
+         
+         var feature2 = new FeatureParams();
+         feature2.Name = "Sum2";
+         feature2.MinValue = -(numParams * boundaryValue) / 2.0;
+         feature2.MaxValue = (numParams * boundaryValue) / 2.0;
+ 
+         var mapParams = new MapParams();
+         mapParams.Type = "FixedFeature";
+         mapParams.StartSize = 100;
+         mapParams.EndSize = 100;
+         mapParams.Features = new FeatureParams[]{feature1, feature2};
+        
+         var meParams = new MapElitesParams();
+         meParams.Search = searchParams;
+         meParams.Map = mapParams;
+        
+         double maxValue = Double.MinValue;
+         SearchAlgorithm search = new MapElitesAlgorithm(0, meParams, numParams);
+         while (search.IsRunning())
+         {
+            Individual cur = search.GenerateIndividual();
+            cur.Fitness = evaluate(0, cur.ParamVector);
+            maxValue = Math.Max(cur.Fitness, maxValue);
+            search.ReturnEvaluatedIndividual(cur);
+         }
+      }
+
+      static void run_tuning(double lowSigma, double highSigma)
+      {
+         int numIters = 101;
+         for (int i=0; i<numIters; i++)
+         {
+            double portion = i / (numIters-1.0);
+            double sigma = (highSigma-lowSigma) * portion + lowSigma;
+            run_me_tuning(i, sigma);
+         }
+      }
+
+
+      static CMA_ES_Algorithm generate_cma_es(int trialID, SearchParams config, int numParams)
+      {
+         var searchConfig =
+            Toml.ReadFile<CMA_ES_Params>(config.ConfigFilename);
+         return new CMA_ES_Algorithm(trialID, searchConfig, numParams);
+      }
+
+      static MapElitesAlgorithm generate_map_elites(int trialID, SearchParams config, int numParams)
+      {
+         var searchConfig =
+            Toml.ReadFile<MapElitesParams>(config.ConfigFilename);
+         foreach (var feature in searchConfig.Map.Features)
+         {
+            feature.MinValue = -(numParams * boundaryValue) / 2.0;
+            feature.MaxValue = (numParams * boundaryValue) / 2.0;
+         }
+         return new MapElitesAlgorithm(trialID, searchConfig, numParams);
+      }
+
+      static CMA_ME_Algorithm generate_cma_me(int trialID, SearchParams config, int numParams)
+      {
+         var searchConfig =
+            Toml.ReadFile<CMA_ME_Params>(config.ConfigFilename);
+         foreach (var feature in searchConfig.Map.Features)
+         {
+            feature.MinValue = -(numParams * boundaryValue) / 2.0;
+            feature.MaxValue = (numParams * boundaryValue) / 2.0;
+         }
+         return new CMA_ME_Algorithm(trialID, searchConfig, numParams);
+      }
+
+      static SearchAlgorithm generate_search(int trialID, SearchParams config, int numParams)
+      {
+         if (config.Type == "CMA-ES")
+            return generate_cma_es(trialID, config, numParams);
+         if (config.Type == "CMA-ME")
+            return generate_cma_me(trialID, config, numParams);
+         if (config.Type == "MAP-Elites")
+            return generate_map_elites(trialID, config, numParams);
+         return null;
+      }
+
+
+      static void run_search(Configuration config)
+      {
+         int fid = config.FunctionType == "Rastrigin" ? 1 : 0;
+
+         for (int trialID=0; trialID<config.NumTrials; trialID++)
+         {
+            Console.WriteLine("Starting search "+trialID);
+
+            int individualCount = 0;
+            string logFilepath = string.Format("logs/individuals_{0}.csv", trialID);
+            RunningIndividualLog individualLog = new RunningIndividualLog(logFilepath);
+            SearchAlgorithm algo = generate_search(trialID, config.Search, config.NumParams);
+            while (algo.IsRunning())
+            {
+               Individual cur = algo.GenerateIndividual();
+               cur.ID = individualCount++;
+               cur.Fitness = evaluate(fid, cur.ParamVector);
+               individualLog.LogIndividual(cur);
+               algo.ReturnEvaluatedIndividual(cur);
+            }
+         }
+      }
 
       static void Main(string[] args)
       {
-         //run_cma_es(500, -1, 100, 0.8);
-         run_cma_me();
-         //run_me();
+         //run_tuning(0.1, 1.1);
+         
+         var config = Toml.ReadFile<Configuration>(args[0]);
+         run_search(config);
       }
    }
 }
