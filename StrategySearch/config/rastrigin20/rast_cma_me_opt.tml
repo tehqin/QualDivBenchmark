@@ -1,0 +1,7 @@
+NumTrials = 30
+NumParams = 20
+FunctionType = "Rastrigin"
+
+[Search]
+Type = "CMA-ME"
+ConfigFilename = "config/cma_me_opt_config.tml"

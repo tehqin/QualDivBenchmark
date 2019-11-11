@@ -117,7 +117,6 @@ namespace StrategySearch.Emitters
          {
             int numParents = _parents.Count;
             bool needsRestart = numParents == 0;
-            Console.WriteLine(ind.EmitterID+" "+numParents);
             
             // Only update if we have parents.
             if (numParents > 0)

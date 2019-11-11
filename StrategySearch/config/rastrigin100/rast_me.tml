@@ -1,0 +1,7 @@
+NumTrials = 30
+NumParams = 100
+FunctionType = "Rastrigin"
+
+[Search]
+Type = "MAP-Elites"
+ConfigFilename = "config/me_config.tml"

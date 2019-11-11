@@ -1,0 +1,7 @@
+NumTrials = 30
+NumParams = 20
+FunctionType = "Sphere"
+
+[Search]
+Type = "CMA-ME"
+ConfigFilename = "config/cma_me_imp_config.tml"

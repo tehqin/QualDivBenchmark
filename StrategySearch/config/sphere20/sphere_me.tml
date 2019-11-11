@@ -1,0 +1,7 @@
+NumTrials = 30
+NumParams = 20
+FunctionType = "Sphere"
+
+[Search]
+Type = "MAP-Elites"
+ConfigFilename = "config/me_config.tml"

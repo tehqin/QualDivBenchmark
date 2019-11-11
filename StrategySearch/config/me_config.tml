@@ -1,0 +1,21 @@
+[Search]
+InitialPopulation = 500
+NumToEvaluate = 50000
+MutationPower = 0.5
+
+[Map]
+Type = "FixedFeature"
+StartSize = 100
+EndSize = 100
+
+[[Map.Features]]
+Name = "Sum1"
+# These values are set dynamically in this experiment.
+MinValue = 0.0
+MaxValue = 0.0
+
+[[Map.Features]]
+Name = "Sum2"
+# These values are set dynamically in this experiment.
+MinValue = 0.0
+MaxValue = 0.0

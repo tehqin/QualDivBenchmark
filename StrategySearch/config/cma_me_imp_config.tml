@@ -1,0 +1,26 @@
+[Search]
+NumToEvaluate = 50000
+
+[Map]
+Type = "FixedFeature"
+StartSize = 100
+EndSize = 100
+
+[[Map.Features]]
+Name = "Sum1"
+# Set dynamically (see code)
+MinValue = 0.0
+MaxValue = 0.0
+
+[[Map.Features]]
+Name = "Sum2"
+# Set dynamically (see code)
+MinValue = 0.0
+MaxValue = 0.0
+
+[[Emitters]]
+Type = "Improvement"
+Count = 15
+OverflowFactor = 1.0
+PopulationSize = 37
+MutationPower = 0.5
