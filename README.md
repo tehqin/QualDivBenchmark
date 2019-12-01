@@ -6,7 +6,7 @@ We test each algorithm against classic test functions Sphere and Rastrigin descr
 
 ## Installation
 
-To install the project, you need to install the [.NET](https://dotnet.microsoft.com/download) developer toolkit for linux or windows. You may also need the [NuGet](https://docs.microsoft.com/en-us/nuget/install-nuget-client-tools) client tools for updating dependencies for the project.
+To install the project, you need to install the [.NET](https://dotnet.microsoft.com/download) developer toolkit for your system. You may also need the [NuGet](https://docs.microsoft.com/en-us/nuget/install-nuget-client-tools) client tools for updating dependencies for the project.
 
 The first step is running the following commands. These will restore dependency dlls on your system and create a directory to save log files for the experiment. Dependencies are [Math.Net](https://numerics.mathdotnet.com/) which is a linear algebra library needed for Eigen decomposition and [Nett](https://github.com/paiden/Nett) which is used for TOML configuration files.
 
