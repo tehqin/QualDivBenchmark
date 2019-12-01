@@ -2,7 +2,7 @@
 
 This project is the toy domain from the paper "Covariance Matrix Adaptation for the Rapid Illumination of Behavior Space". The project includes parallelizable implementations of CMA-ES, MAP-Elites, and the new CMA-ME algorithm detailed in the paper.
 
-We test each algorithm against classic test functions Sphere and Rastrigin described in the paper. Despite the name, this project is not a official benchmark and merely tests how well each algorithm can cover a behavior space that is a linear projection from parameter space.
+We test each algorithm against classic test functions Sphere and Rastrigin described in the paper. Despite the name, this project is not a official benchmark, but rather an implementation of standard black-box optimization benchmarks. The goal is to test behavioral coverage of behavior spaces that are formed from linear projections of parameter space. Arguments for why this is important are made in the paper.
 
 ## Installation
 
