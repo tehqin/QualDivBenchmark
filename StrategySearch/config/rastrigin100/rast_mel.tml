@@ -1,0 +1,7 @@
+NumTrials = 30
+NumParams = 100
+FunctionType = "Rastrigin"
+
+[Search]
+Type = "MAP-Elites-Line"
+ConfigFilename = "config/mel_config.tml"

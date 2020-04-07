@@ -123,6 +123,18 @@ namespace StrategySearch
          return new MapElitesAlgorithm(trialID, searchConfig, numParams);
       }
 
+      static MapElitesLineAlgorithm generate_map_elites_line(int trialID, SearchParams config, int numParams)
+      {
+         var searchConfig =
+            Toml.ReadFile<MapElitesParams>(config.ConfigFilename);
+         foreach (var feature in searchConfig.Map.Features)
+         {
+            feature.MinValue = -(numParams * boundaryValue) / 2.0;
+            feature.MaxValue = (numParams * boundaryValue) / 2.0;
+         }
+         return new MapElitesLineAlgorithm(trialID, searchConfig, numParams);
+      }
+
       static CMA_ME_Algorithm generate_cma_me(int trialID, SearchParams config, int numParams)
       {
          var searchConfig =
@@ -143,6 +155,8 @@ namespace StrategySearch
             return generate_cma_me(trialID, config, numParams);
          if (config.Type == "MAP-Elites")
             return generate_map_elites(trialID, config, numParams);
+         if (config.Type == "MAP-Elites-Line")
+            return generate_map_elites_line(trialID, config, numParams);
          return null;
       }
 
