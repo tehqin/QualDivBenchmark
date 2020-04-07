@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Numerics;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Nett;
 
@@ -160,27 +162,39 @@ namespace StrategySearch
          return null;
       }
 
+      static void run_search(Configuration config, int trialID, int fid)
+      {
+         Console.WriteLine("Starting search "+trialID);
+
+         int individualCount = 0;
+         string logFilepath = string.Format("logs/individuals_{0}.csv", trialID);
+         RunningIndividualLog individualLog = new RunningIndividualLog(logFilepath);
+         SearchAlgorithm algo = generate_search(trialID, config.Search, config.NumParams);
+         while (algo.IsRunning())
+         {
+            Individual cur = algo.GenerateIndividual();
+            cur.ID = individualCount++;
+            cur.Fitness = evaluate(fid, cur.ParamVector);
+            individualLog.LogIndividual(cur);
+            algo.ReturnEvaluatedIndividual(cur);
+         }
+
+         Console.WriteLine("Ending search "+trialID);
+      }
 
       static void run_search(Configuration config)
       {
          int fid = config.FunctionType == "Rastrigin" ? 1 : 0;
 
+/*
+         Parallel.For(0, config.NumTrials,
+                   trialID => { run_search(config, trialID, fid); } 
+               );
+*/
+
          for (int trialID=0; trialID<config.NumTrials; trialID++)
          {
-            Console.WriteLine("Starting search "+trialID);
-
-            int individualCount = 0;
-            string logFilepath = string.Format("logs/individuals_{0}.csv", trialID);
-            RunningIndividualLog individualLog = new RunningIndividualLog(logFilepath);
-            SearchAlgorithm algo = generate_search(trialID, config.Search, config.NumParams);
-            while (algo.IsRunning())
-            {
-               Individual cur = algo.GenerateIndividual();
-               cur.ID = individualCount++;
-               cur.Fitness = evaluate(fid, cur.ParamVector);
-               individualLog.LogIndividual(cur);
-               algo.ReturnEvaluatedIndividual(cur);
-            }
+            run_search(config, trialID, fid);
          }
       }
 
