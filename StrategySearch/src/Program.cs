@@ -24,6 +24,17 @@ namespace StrategySearch
    class Program
    {
       static double boundaryValue = 5.12;
+      
+      // Set by evaluate on boundary value
+      static double maxFitnessValue = 0.0; 
+      static double fitnessScalarValue = 0.0;
+
+      // Turns minimized problem into maximize and normalizes to [0, 100]
+      static double norm_fitness(double fitness)
+      {
+         return Math.Max(0.0, 
+            fitnessScalarValue * (fitness - maxFitnessValue));
+      }
 
       static double eval_sphere(double[] vs)
       {
@@ -162,48 +173,66 @@ namespace StrategySearch
          return null;
       }
 
-      static void run_search(Configuration config, int trialID, int fid)
+      static void run_search(Configuration config, int trialID)
       {
-         Console.WriteLine("Starting search "+trialID);
+         int fid = config.FunctionType == "Rastrigin" ? 1 : 0;
+         double[] trialVector = new double[config.NumParams];
+         for (int i=0; i<config.NumParams; i++)
+            trialVector[i] = -boundaryValue;
+         maxFitnessValue = evaluate(fid, trialVector);
+         fitnessScalarValue = -100.0 / maxFitnessValue;
 
          int individualCount = 0;
-         string logFilepath = string.Format("logs/individuals_{0}.csv", trialID);
-         RunningIndividualLog individualLog = new RunningIndividualLog(logFilepath);
+         RunningIndividualLog individualLog = null;
+         if (config.Search.LogIndividuals)
+         {  
+            string logFilepath = string.Format("logs/individuals_{0}.csv", trialID);
+            individualLog = new RunningIndividualLog(logFilepath);
+         }
+         
          SearchAlgorithm algo = generate_search(trialID, config.Search, config.NumParams);
          while (algo.IsRunning())
          {
             Individual cur = algo.GenerateIndividual();
             cur.ID = individualCount++;
             cur.Fitness = evaluate(fid, cur.ParamVector);
-            individualLog.LogIndividual(cur);
+            cur.NormFitness = norm_fitness(cur.Fitness);
+            
+            if (config.Search.LogIndividuals)
+               individualLog.LogIndividual(cur);
+            
             algo.ReturnEvaluatedIndividual(cur);
          }
-
-         Console.WriteLine("Ending search "+trialID);
       }
 
       static void run_search(Configuration config)
       {
-         int fid = config.FunctionType == "Rastrigin" ? 1 : 0;
-
-/*
-         Parallel.For(0, config.NumTrials,
-                   trialID => { run_search(config, trialID, fid); } 
-               );
-*/
-
          for (int trialID=0; trialID<config.NumTrials; trialID++)
-         {
-            run_search(config, trialID, fid);
-         }
+            run_search(config, trialID);
       }
 
       static void Main(string[] args)
       {
+         Console.WriteLine(string.Join(",", args));
          //run_tuning(0.1, 1.1);
          
-         var config = Toml.ReadFile<Configuration>(args[0]);
-         run_search(config);
+         if (args.Length == 1)
+         {
+            var config = Toml.ReadFile<Configuration>(args[0]);
+            run_search(config);
+         }
+         else if (args.Length == 2)
+         {
+            var config = Toml.ReadFile<Configuration>(args[0]);
+            run_search(config, Int32.Parse(args[1]));
+         }
+         else
+         {
+            Console.WriteLine(
+               "Specify a config file or a config file and trial id."
+               );
+         }
+
       }
    }
 }

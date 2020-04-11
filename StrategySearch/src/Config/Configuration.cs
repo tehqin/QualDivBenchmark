@@ -12,6 +12,7 @@ namespace StrategySearch.Config
    {
       public string Type { get; set; }
       public string ConfigFilename { get; set; }
+      public bool LogIndividuals { get; set; }
    }
 
 }

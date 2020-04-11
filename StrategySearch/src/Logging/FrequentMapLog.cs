@@ -27,7 +27,7 @@ namespace StrategySearch.Logging
          {
             string[] dataLabels = {
                   "Dimensions",
-                  "Map (f1xf2:Size:Individual:Fitness:Feature1:Feature2)"
+                  "Map (f1xf2:Size:Individual:Fitness:NormFitness:Feature1:Feature2)"
                };
 
             WriteText(ow, string.Join(",", dataLabels));
@@ -62,6 +62,7 @@ namespace StrategySearch.Logging
                cellComponents.Add(_map.CellCount[index].ToString());
                cellComponents.Add(cur.ID.ToString());
                cellComponents.Add(cur.Fitness.ToString());
+               cellComponents.Add(cur.NormFitness.ToString());
                foreach (var curFeature in cur.Features)
                   cellComponents.Add(curFeature.ToString());
                

@@ -34,6 +34,7 @@ namespace StrategySearch.Search.MapElites
 
       private int _trialID;
       private FrequentMapLog _map_log;
+      private MapSummaryLog _summary_log;
       
       public MapElitesLineAlgorithm(int trialID, MapElitesParams searchParams, int numParams)
       {
@@ -62,8 +63,14 @@ namespace StrategySearch.Search.MapElites
          else
             Console.WriteLine("ERROR: No feature map specified in config file.");
 
-         string mapName = string.Format("logs/elite_map_log_{0}.csv", _trialID);
+         string prefix = "logs/";
+         if (_params.Map.SeparateLoggingFolder)
+            prefix = "logs/mel";
+
+         string mapName = string.Format("{0}/map_{1}.csv", prefix, _trialID);
+         string summaryName = string.Format("{0}/summary_{1}.csv", prefix, _trialID);
          _map_log = new FrequentMapLog(mapName, _featureMap);
+         _summary_log = new MapSummaryLog(summaryName, _featureMap);
       }
 
       public bool IsRunning() => _individualsEvaluated < _params.Search.NumToEvaluate;
@@ -115,13 +122,11 @@ namespace StrategySearch.Search.MapElites
          _maxFitness = Math.Max(_maxFitness, ind.Fitness);
          _featureMap.Add(ind);
 
-         if (_individualsEvaluated % 100 == 0)
+         if (_individualsEvaluated % _params.Map.MapLoggingFrequency == 0)
             _map_log.UpdateLog();
-      
-         if (!IsRunning())
-         {
-            Console.WriteLine(string.Format("{0},{1},{2}", _params.Search.MutationPower, _maxFitness, _featureMap.EliteMap.Count));
-         }
+
+         if (_individualsEvaluated % _params.Map.SummaryLoggingFrequency == 0)
+            _summary_log.UpdateLog(_individualsEvaluated);
       }
    }
 }

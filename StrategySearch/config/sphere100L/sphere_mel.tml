@@ -4,5 +4,5 @@ FunctionType = "Sphere"
 
 [Search]
 Type = "MAP-Elites-Line"
-ConfigFilename = "config/mel_config.tml"
-LogIndividuals = true
+ConfigFilename = "config/mel_long.tml"
+LogIndividuals = false

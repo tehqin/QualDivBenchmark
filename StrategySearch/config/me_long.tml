@@ -1,18 +1,17 @@
 [Search]
 InitialPopulation = 500
-NumToEvaluate = 50000
-MutationPower = 0.05
-MutationPower2 = 0.5
+NumToEvaluate = 2500000
+MutationPower = 0.5
 
 [Map]
 # Logging Frequency Settings
-SeparateLoggingFolder = false
-MapLoggingFrequency = 100
-SummaryLoggingFrequency = 100
+SeparateLoggingFolder = true
+MapLoggingFrequency = 2500000
+SummaryLoggingFrequency = 1000
 
 Type = "FixedFeature"
-StartSize = 100
-EndSize = 100
+StartSize = 500
+EndSize = 500
 
 [[Map.Features]]
 Name = "Sum1"

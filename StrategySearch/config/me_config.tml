@@ -4,6 +4,11 @@ NumToEvaluate = 50000
 MutationPower = 0.5
 
 [Map]
+# Logging Frequency Settings
+SeparateLoggingFolder = false
+MapLoggingFrequency = 100
+SummaryLoggingFrequency = 100
+
 Type = "FixedFeature"
 StartSize = 100
 EndSize = 100

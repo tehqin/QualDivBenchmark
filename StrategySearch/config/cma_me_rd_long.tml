@@ -1,15 +1,15 @@
 [Search]
-NumToEvaluate = 50000
+NumToEvaluate = 2500000
 
 [Map]
 # Logging Frequency Settings
-SeparateLoggingFolder = false
-MapLoggingFrequency = 100
-SummaryLoggingFrequency = 100
+SeparateLoggingFolder = true
+MapLoggingFrequency = 2500000
+SummaryLoggingFrequency = 1000
 
 Type = "FixedFeature"
-StartSize = 100
-EndSize = 100
+StartSize = 500
+EndSize = 500
 
 [[Map.Features]]
 Name = "Sum1"
@@ -24,9 +24,8 @@ MinValue = 0.0
 MaxValue = 0.0
 
 [[Emitters]]
-Type = "Optimizing"
+Type = "RandomDirection"
 Count = 15
 OverflowFactor = 1.0
 PopulationSize = 37
-NumParents = 18 
 MutationPower = 0.5

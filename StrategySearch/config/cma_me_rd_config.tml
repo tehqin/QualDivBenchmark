@@ -2,6 +2,11 @@
 NumToEvaluate = 50000
 
 [Map]
+# Logging Frequency Settings
+SeparateLoggingFolder = false
+MapLoggingFrequency = 100
+SummaryLoggingFrequency = 100
+
 Type = "FixedFeature"
 StartSize = 100
 EndSize = 100

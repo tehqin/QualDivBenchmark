@@ -5,3 +5,4 @@ FunctionType = "Rastrigin"
 [Search]
 Type = "MAP-Elites-Line"
 ConfigFilename = "config/mel_config.tml"
+LogIndividuals = true

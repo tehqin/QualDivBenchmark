@@ -9,6 +9,7 @@ namespace StrategySearch.Search
       public int Generation { get; set; }
       
       public double Fitness { get; set; }
+      public double NormFitness { get; set; }
       public double Delta { get; set; }
       public bool IsNovel { get; set; }
       public double[] ParamVector { get; set; }
