@@ -5,4 +5,4 @@ FunctionType = "Sphere"
 [Search]
 Type = "CMA-ME"
 ConfigFilename = "config/cma_me_imp_config.tml"
-LogIndividuals = true
+LogIndividuals = false

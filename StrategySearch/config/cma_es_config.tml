@@ -1,5 +1,27 @@
 OverflowFactor = 1.0
 NumParents = 250
 PopulationSize = 500
-NumToEvaluate = 50000
+NumToEvaluate = 2500000
 MutationPower = 0.5
+
+[Map]
+# Logging Frequency Settings
+SeparateLoggingFolder = true
+MapLoggingFrequency = 2500000
+SummaryLoggingFrequency = 1000
+
+Type = "FixedFeature"
+StartSize = 500
+EndSize = 500
+
+[[Map.Features]]
+Name = "Sum1"
+# These values are set dynamically in this experiment.
+MinValue = 0.0
+MaxValue = 0.0
+
+[[Map.Features]]
+Name = "Sum2"
+# These values are set dynamically in this experiment.
+MinValue = 0.0
+MaxValue = 0.0

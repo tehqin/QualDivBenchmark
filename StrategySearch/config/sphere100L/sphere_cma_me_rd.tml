@@ -1,8 +1,0 @@
-NumTrials = 30
-NumParams = 100
-FunctionType = "Sphere"
-
-[Search]
-Type = "CMA-ME"
-ConfigFilename = "config/cma_me_rd_long.tml"
-LogIndividuals = false

@@ -1,15 +1,15 @@
 [Search]
-NumToEvaluate = 50000
+NumToEvaluate = 2500000
 
 [Map]
 # Logging Frequency Settings
-SeparateLoggingFolder = false
-MapLoggingFrequency = 100
-SummaryLoggingFrequency = 100
+SeparateLoggingFolder = true
+MapLoggingFrequency = 2500000
+SummaryLoggingFrequency = 1000
 
 Type = "FixedFeature"
-StartSize = 100
-EndSize = 100
+StartSize = 500
+EndSize = 500
 
 [[Map.Features]]
 Name = "Sum1"
