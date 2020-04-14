@@ -49,6 +49,6 @@ Below is the config file for CMA-ES. Note that parameters like mutation power an
 OverflowFactor = 1.0
 NumParents = 250
 PopulationSize = 500
-NumToEvaluate = 50000
+NumToEvaluate = 2500000
 MutationPower = 0.5
 ```
