@@ -70,7 +70,7 @@ namespace StrategySearch.Emitters
 
       private bool checkStop(List<Individual> parents)
       {
-         if (double.IsNaN(_C.ConditionNumber) ||  _C.ConditionNumber > 1e14)
+         if (_C.ConditionNumber > 1e14)
             return true;
 
          double area = _mutationPower * Math.Sqrt(_C.Eigenvalues.Maximum());
