@@ -121,6 +121,11 @@ namespace StrategySearch
       {
          var searchConfig =
             Toml.ReadFile<CMA_ES_Params>(config.ConfigFilename);
+         foreach (var feature in searchConfig.Map.Features)
+         {
+            feature.MinValue = -(numParams * boundaryValue) / 2.0;
+            feature.MaxValue = (numParams * boundaryValue) / 2.0;
+         }
          return new CMA_ES_Algorithm(trialID, searchConfig, numParams);
       }
 

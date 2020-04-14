@@ -9,6 +9,9 @@ using LA = MathNet.Numerics.LinearAlgebra;
 
 using StrategySearch.Config;
 using StrategySearch.Emitters;
+using StrategySearch.Logging;
+using StrategySearch.Mapping;
+using StrategySearch.Mapping.Sizers;
 
 namespace StrategySearch.Search.CMA_ES
 {
@@ -32,6 +35,7 @@ namespace StrategySearch.Search.CMA_ES
 		private int _individualsEvaluated;
 		private int _individualsEvaluatedTotal;
 		private int _generation;
+      private FeatureMap _featureMap;
 
       private MathNet.Numerics.LinearAlgebra.Vector<double> _weights;
 
@@ -39,6 +43,10 @@ namespace StrategySearch.Search.CMA_ES
       private LA.Vector<double> _pc, _ps;
 
       private DecompMatrix _C;
+
+      private int _trialID;
+      private FrequentMapLog _map_log;
+      private MapSummaryLog _summary_log;
 
 		public CMA_ES_Algorithm(int trialID, CMA_ES_Params searchParams, int numParams)
 		{
@@ -51,7 +59,34 @@ namespace StrategySearch.Search.CMA_ES
          _generation = 0;
          _bestIndividual = null;
 
+         _trialID = trialID;
+         initMap();
+
          Reset();
+      }
+
+      private void initMap()
+      {
+         var mapSizer = new LinearMapSizer(_params.Map.StartSize,
+                                           _params.Map.EndSize);
+
+         if (_params.Map.Type.Equals("FixedFeature"))
+            _featureMap = new FixedFeatureMap(_params.NumToEvaluate,
+                                              _params.Map, mapSizer);
+         else if (_params.Map.Type.Equals("SlidingFeature"))
+            _featureMap = new SlidingFeatureMap(_params.NumToEvaluate,
+                                                _params.Map, mapSizer);
+         else
+            Console.WriteLine("ERROR: No feature map specified in config file.");
+
+         string prefix = "logs/";
+         if (_params.Map.SeparateLoggingFolder)
+            prefix = "logs/cma_es";
+
+         string mapName = string.Format("{0}/map_{1}.csv", prefix, _trialID);
+         string summaryName = string.Format("{0}/summary_{1}.csv", prefix, _trialID);
+         _map_log = new FrequentMapLog(mapName, _featureMap);
+         _summary_log = new MapSummaryLog(summaryName, _featureMap);
       }
 
       public void Reset()
@@ -138,9 +173,21 @@ namespace StrategySearch.Search.CMA_ES
          ind.ID = _individualsEvaluatedTotal;
 			_individualsEvaluatedTotal++;
 
+         // Update map information for comparison purposes
+         ind.Features = new double[_params.Map.Features.Length];
+         for (int i=0; i<_params.Map.Features.Length; i++)
+            ind.Features[i] = ind.GetStatByName(_params.Map.Features[i].Name);
+         _featureMap.Add(ind);
+         if (_individualsEvaluatedTotal % _params.Map.MapLoggingFrequency == 0)
+            _map_log.UpdateLog();
+         if (_individualsEvaluatedTotal % _params.Map.SummaryLoggingFrequency == 0)
+            _summary_log.UpdateLog(_individualsEvaluatedTotal);
+
+         // Store the best individual
          if (_bestIndividual == null || _bestIndividual.Fitness < ind.Fitness)
             _bestIndividual = ind;
 
+         // Used for overflow only
          if (ind.Generation != _generation)
             return;
 
@@ -152,7 +199,6 @@ namespace StrategySearch.Search.CMA_ES
             // Rank solutions
 				var parents = _population.OrderByDescending(o => o.Fitness)
 					.Take(_params.NumParents).ToList();
-            Console.WriteLine(parents[0].Fitness);
 
             // Recombination of the new mean
 		      LA.Vector<double> oldMean = _mean;
@@ -193,6 +239,6 @@ namespace StrategySearch.Search.CMA_ES
             _individualsDispatched = 0;
             _population.Clear();
 			}
-		}
+      }
 	}
 }
