@@ -132,7 +132,7 @@ namespace StrategySearch.Search.CMA_ES
 
       public bool CheckStop(List<Individual> parents)
       {
-         if (double.IsNaN(_C.ConditionNumber) ||  _C.ConditionNumber > 1e14)
+         if (_C.ConditionNumber > 1e14)
             return true;
          
          double area = _mutationPower * Math.Sqrt(_C.Eigenvalues.Maximum());
