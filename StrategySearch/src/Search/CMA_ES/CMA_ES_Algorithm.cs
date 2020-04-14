@@ -112,8 +112,6 @@ namespace StrategySearch.Search.CMA_ES
             for (int i=0; i<_numParams; i++)
                _mean[i] = _bestIndividual.ParamVector[i];
          }
-         Console.WriteLine("RESET");
-         Console.WriteLine(_mean);
 
          _cc = (4+_mueff/_numParams) / (_numParams+4 + 2*_mueff/_numParams);
          _cs = (_mueff+2) / (_numParams+_mueff+5);
