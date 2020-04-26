@@ -71,7 +71,7 @@ namespace StrategySearch.Mapping
          return string.Join(":", features);
       }
 
-		private bool AddToMap(Individual toAdd)
+      private bool AddToMap(Individual toAdd)
       {
          string index = GetIndex(toAdd);
 
